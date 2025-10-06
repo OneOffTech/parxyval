@@ -1,0 +1,65 @@
+[project]
+name = "parxyval"
+version = "0.1.0" # DO NOT EDIT, updated automatically
+description = "An evaluation framework for document parsing."
+license = "MIT"
+keywords= ["parxy", "evaluation", "evaluation-framework", "convert", "document", "document-parsing", "parser-benchmark", "pdf", "docx", "html", "markdown", "layout model", "rag", "llm", "document-performance-monitoring", "document-ai","text-extraction","data-quality","rag","parsing-tools"]
+readme = "README.md"
+authors = [
+    { name = "Alessio Vertemati", email = "alessio@oneofftech.xyz" }
+]
+classifiers = [
+    "Operating System :: MacOS :: MacOS X",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: Microsoft :: Windows",
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+]
+requires-python = ">=3.12,<4.0"
+dependencies = [
+    "datasets>=4.1.1",
+    "nltk>=3.9.2",
+    "pandas>=2.3.3",
+    "parxy[all]>=0.10.0",
+    "pydantic>=2.11.9",
+    "pydantic-settings>=2.11.0",
+    "pymupdf>=1.26.4",
+    "python-dotenv>=1.1.1",
+    "rich>=14.1.0",
+    "tqdm>=4.67.1",
+    "typer>=0.19.2",
+]
+
+[project.urls]
+homepage = "https://github.com/OneOffTech/parxyval"
+repository = "https://github.com/OneOffTech/parxyval"
+issues = "https://github.com/OneOffTech/parxyval/issues"
+
+[project.scripts]
+parxyval = "parxyval.cli.main:app"
+
+[build-system]
+requires = ["uv_build>=0.8.11,<0.9.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.4.2",
+    "ruff>=0.13.2",
+]
+
+[tool.uv]
+default-groups = "all"
+
+[tool.pytest.ini_options]
+addopts = [
+    "--import-mode=importlib",
+]
+
+[tool.ruff.format]
+quote-style = "single"
+docstring-code-format = true
