@@ -3,14 +3,11 @@ from typing import Optional, List, Dict
 
 from parxy_core.models import BoundingBox, TextBlock, Page
 
-HEADING_LABELS = ["heading", "title", "section-header"]
+HEADING_LABELS = ['heading', 'title', 'section-header']
 HEADING_MATCHER_TEXT_SIMILARITY_THRESHOLD = 0.9
 
 
-def bbox_iou(
-        b1: BoundingBox,
-        b2: BoundingBox
-) -> float:
+def bbox_iou(b1: BoundingBox, b2: BoundingBox) -> float:
     """Compute Intersection over Union (IoU) of two bounding boxes.
 
     Args:
@@ -41,9 +38,9 @@ def bbox_iou(
 
 
 def match_bboxes(
-        true_doc: Page,
-        pred_doc: Page,
-        pivot: Optional[str] = None,
+    true_doc: Page,
+    pred_doc: Page,
+    pivot: Optional[str] = None,
 ) -> List[Dict[str, List]]:
     """
     Function adapted from
@@ -65,12 +62,12 @@ def match_bboxes(
       "pred_tokens": List[str] of the tokenized text contained in the pred_bboxes
     """
     if pivot is not None:
-        assert pivot in ["true", "pred"]
+        assert pivot in ['true', 'pred']
 
     # Collect bboxes from both documents (true, pred)
-    bboxes: Dict[str, List[BoundingBox]] = {"true": [], "pred": []}
-    texts: Dict[str, List[str]] = {"true": [], "pred": []}
-    for doc_key, doc in {"true": true_doc, "pred": pred_doc}.items():
+    bboxes: Dict[str, List[BoundingBox]] = {'true': [], 'pred': []}
+    texts: Dict[str, List[str]] = {'true': [], 'pred': []}
+    for doc_key, doc in {'true': true_doc, 'pred': pred_doc}.items():
         for doc_item in doc.blocks:
             if not isinstance(doc_item, TextBlock):
                 continue
@@ -79,8 +76,8 @@ def match_bboxes(
 
     # Decide which document is the pivot
     if pivot is None:
-        pivot = "true" if len(bboxes["true"]) <= len(bboxes["pred"]) else "pred"
-    other = "pred" if pivot == "true" else "true"
+        pivot = 'true' if len(bboxes['true']) <= len(bboxes['pred']) else 'pred'
+    other = 'pred' if pivot == 'true' else 'true'
 
     # Map the "pivot" bboxes to the "other" bboxes
     # Keys: the indices from bboxes[pivot]. Each value: list with indices from bboxes[other]
@@ -102,8 +99,8 @@ def match_bboxes(
 
     # Collect the unmatched true bboxes
     orphan_trues: List[int] = []
-    for true_id in range(len(bboxes["true"])):
-        if pivot == "true":
+    for true_id in range(len(bboxes['true'])):
+        if pivot == 'true':
             if true_id not in pivot_mappings:
                 orphan_trues.append(true_id)
         else:
@@ -130,24 +127,24 @@ def match_bboxes(
 
         matches.append(
             {
-                f"{pivot}_bboxes": pivot_bboxes,
-                f"{pivot}_tokens": pivot_tokens,
-                f"{other}_bboxes": other_bboxes,
-                f"{other}_tokens": other_tokens,
+                f'{pivot}_bboxes': pivot_bboxes,
+                f'{pivot}_tokens': pivot_tokens,
+                f'{other}_bboxes': other_bboxes,
+                f'{other}_tokens': other_tokens,
             }
         )
 
     # Add the orphans_true inside the matches
     for orphan_true_id in orphan_trues:
-        orphan_bboxes = [bboxes["true"][orphan_true_id]]
-        orphan_text = texts["true"][orphan_true_id]
+        orphan_bboxes = [bboxes['true'][orphan_true_id]]
+        orphan_text = texts['true'][orphan_true_id]
         orphan_tokens = orphan_text.split()
         matches.append(
             {
-                "true_bboxes": orphan_bboxes,
-                "true_tokens": orphan_tokens,
-                "pred_bboxes": [],
-                "pred_tokens": [],
+                'true_bboxes': orphan_bboxes,
+                'true_tokens': orphan_tokens,
+                'pred_bboxes': [],
+                'pred_tokens': [],
             }
         )
 
@@ -155,10 +152,10 @@ def match_bboxes(
 
 
 def text_block_match(
-        block1: TextBlock,
-        block2: TextBlock,
-        text_thresh: float = 0.8,
-        iou_thresh: float = 0.5
+    block1: TextBlock,
+    block2: TextBlock,
+    text_thresh: float = 0.8,
+    iou_thresh: float = 0.5,
 ) -> bool:
     """Check if two text blocks match based on text similarity or bounding box IoU.
 
@@ -187,10 +184,7 @@ def text_block_match(
     return text_sim >= text_thresh or iou >= iou_thresh
 
 
-def text_similarity(
-        a: str,
-        b: str
-) -> float:
+def text_similarity(a: str, b: str) -> float:
     """Compute SequenceMatcher ratio between two strings.
 
     Args:

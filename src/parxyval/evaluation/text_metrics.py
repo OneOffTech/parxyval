@@ -14,10 +14,10 @@ from parxyval.evaluation.utils import text_similarity
 
 
 def pagewise_metric(
-        doc1: Document,
-        doc2: Document,
-        score_fn: Callable[[str, str], float],
-        tokenize: bool = True,
+    doc1: Document,
+    doc2: Document,
+    score_fn: Callable[[str, str], float],
+    tokenize: bool = True,
 ) -> float:
     """Generic page-wise metric aggregator.
 
@@ -37,121 +37,107 @@ def pagewise_metric(
     """
     scores = []
     for page1, page2 in zip(doc1.pages, doc2.pages):
-        x, y = (page1.text.split(), page2.text.split()) if tokenize else (page1.text, page2.text)
+        x, y = (
+            (page1.text.split(), page2.text.split())
+            if tokenize
+            else (page1.text, page2.text)
+        )
         score = score_fn(x, y)
         scores.append(score if score is not None else 0.0)
 
     return mean(scores) if scores else 0.0
 
 
-@register_metric("sequence_matcher")
-def sequence_matcher_metric(
-        reference: Document,
-        test: Document
-) -> Dict[str, float]:
+@register_metric('sequence_matcher')
+def sequence_matcher_metric(reference: Document, test: Document) -> Dict[str, float]:
     return {
-        "sequence_matcher": pagewise_metric(
-            reference, test,
-            lambda a, b: text_similarity(a=a, b=b),
-            tokenize=False
+        'sequence_matcher': pagewise_metric(
+            reference, test, lambda a, b: text_similarity(a=a, b=b), tokenize=False
         )
     }
 
 
-@register_metric("jaccard_similarity")
-def jaccard_similarity_metric(
-        reference: Document,
-        test: Document
-) -> Dict[str, float]:
+@register_metric('jaccard_similarity')
+def jaccard_similarity_metric(reference: Document, test: Document) -> Dict[str, float]:
     return {
-        "jaccard_similarity": pagewise_metric(
-            reference, test,
+        'jaccard_similarity': pagewise_metric(
+            reference,
+            test,
             lambda x, y: len(set(x) & set(y)) / len(set(x) | set(y)) if x or y else 0,
-            tokenize=True
+            tokenize=True,
         )
     }
 
 
-@register_metric("bleu_score")
-def bleu_score(
-        reference: Document,
-        test: Document
-) -> Dict[str, float]:
+@register_metric('bleu_score')
+def bleu_score(reference: Document, test: Document) -> Dict[str, float]:
     smooth = SmoothingFunction().method1
     return {
-        "bleu_score": pagewise_metric(
-            reference, test,
-            lambda x, y: sentence_bleu(references=[x], hypothesis=y, smoothing_function=smooth),
-            tokenize=True
+        'bleu_score': pagewise_metric(
+            reference,
+            test,
+            lambda x, y: sentence_bleu(
+                references=[x], hypothesis=y, smoothing_function=smooth
+            ),
+            tokenize=True,
         )
     }
 
 
-@register_metric("f1_score")
-def f1_score(
-        reference: Document,
-        test: Document
-) -> Dict[str, float]:
+@register_metric('f1_score')
+def f1_score(reference: Document, test: Document) -> Dict[str, float]:
     return {
-        "f1_score": pagewise_metric(
-            reference, test,
-            lambda x, y: f_measure(set(x), set(y)) or 0,
-            tokenize=True
+        'f1_score': pagewise_metric(
+            reference, test, lambda x, y: f_measure(set(x), set(y)) or 0, tokenize=True
         )
     }
 
 
-@register_metric("precision")
-def precision(
-        reference: Document,
-        test: Document
-) -> Dict[str, float]:
+@register_metric('precision')
+def precision(reference: Document, test: Document) -> Dict[str, float]:
     return {
-        "precision": pagewise_metric(
-            reference, test,
+        'precision': pagewise_metric(
+            reference,
+            test,
             lambda x, y: nltk_precision(set(x), set(y)) or 0,
-            tokenize=True
+            tokenize=True,
         )
     }
 
 
-@register_metric("recall")
-def recall(
-        reference: Document,
-        test: Document
-) -> Dict[str, float]:
+@register_metric('recall')
+def recall(reference: Document, test: Document) -> Dict[str, float]:
     return {
-        "recall": pagewise_metric(
-            reference, test,
+        'recall': pagewise_metric(
+            reference,
+            test,
             lambda x, y: nltk_recall(set(x), set(y)) or 0,
-            tokenize=True
+            tokenize=True,
         )
     }
 
 
-@register_metric("edit_distance")
-def edit_distance(
-        reference: Document,
-        test: Document
-) -> Dict[str, float]:
+@register_metric('edit_distance')
+def edit_distance(reference: Document, test: Document) -> Dict[str, float]:
     return {
-        "edit_distance": pagewise_metric(
-            reference, test,
-            lambda x, y: nltk_edit_distance(x, y) / max(len(x), len(y)) if not (len(x) == len(y) == 0) else 0,
-            tokenize=True
+        'edit_distance': pagewise_metric(
+            reference,
+            test,
+            lambda x, y: nltk_edit_distance(x, y) / max(len(x), len(y))
+            if not (len(x) == len(y) == 0)
+            else 0,
+            tokenize=True,
         )
     }
 
 
-@register_metric("meteor_score")
-def meteor_score(
-        reference: Document,
-        test: Document
-) -> Dict[str, float]:
+@register_metric('meteor_score')
+def meteor_score(reference: Document, test: Document) -> Dict[str, float]:
     return {
-        "meteor": pagewise_metric(
-            reference, test,
+        'meteor': pagewise_metric(
+            reference,
+            test,
             lambda x, y: nltk_meteor_score.meteor_score([x], y) or 0,
-            tokenize=True
+            tokenize=True,
         )
     }

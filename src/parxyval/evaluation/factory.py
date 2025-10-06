@@ -4,7 +4,7 @@ METRIC_REGISTRY = {}
 
 
 def get_metric(name: str) -> Optional[Callable]:
-    name = name.lower().strip().replace("-", "_").replace(" ", "_")
+    name = name.lower().strip().replace('-', '_').replace(' ', '_')
     return METRIC_REGISTRY.get(name, None)
 
 

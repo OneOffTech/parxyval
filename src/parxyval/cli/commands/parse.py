@@ -22,10 +22,11 @@ import pymupdf
 
 app = typer.Typer()
 
+
 @app.command()
 def parse(
     driver: Optional[str] = typer.Option(
-        "pymupdf",
+        'pymupdf',
         '--driver',
         '-d',
         help='The Parxy driver to use.',
@@ -66,7 +67,7 @@ def parse(
         help='Ignore existing downloaded documents and download them from the dataset. Use in case you have a different amount of files locally than the ones you would like to process.',
     ),
     level: Optional[str] = typer.Option(
-        "block",
+        'block',
         '--level',
         help='The level at which perform the processing.',
     ),
@@ -75,7 +76,7 @@ def parse(
 
     logging.basicConfig(
         level=logging.WARNING,
-        format="%(asctime)s : %(levelname)s : %(name)s : %(message)s"
+        format='%(asctime)s : %(levelname)s : %(name)s : %(message)s',
     )
 
     driver = driver.lower().strip()
@@ -83,26 +84,30 @@ def parse(
 
     # Check if the input and output dir exist
     if input_path and not os.path.isdir(input_path):
-        sys.exit(f"The specified input folder [{input_path}] does not exist!")
-        
+        sys.exit(f'The specified input folder [{input_path}] does not exist!')
+
     if not os.path.isdir(output_folder):
         os.makedirs(output_folder)
 
-    print(f"Parsing documents from {Dataset.DOCLAYNETV2.value} using {driver}...")
+    print(f'Parsing documents from {Dataset.DOCLAYNETV2.value} using {driver}...')
     print()
 
     # Initialize the object to iterate over
     if ignore_local_files:
         # Hugging Face dataset
-        logging.debug(f"Input dataset: ds4sd/DocLayNet-v1.2")
-        iterator: IterableDatasetDict = load_dataset(Dataset.DOCLAYNETV2.value, split="train",
-                                                     streaming=True, columns=["metadata", "pdf"])
+        logging.debug(f'Input dataset: ds4sd/DocLayNet-v1.2')
+        iterator: IterableDatasetDict = load_dataset(
+            Dataset.DOCLAYNETV2.value,
+            split='train',
+            streaming=True,
+            columns=['metadata', 'pdf'],
+        )
     else:
         # List of filenames
         iterator: list[str] = os.listdir(input_path)
-        logging.debug(f"Input folder: {input_path}")
+        logging.debug(f'Input folder: {input_path}')
 
-    logging.debug(f"Output folder: {output_folder}")
+    logging.debug(f'Output folder: {output_folder}')
 
     # Init parxy
     parxy = Parxy.driver(driver)
@@ -115,15 +120,16 @@ def parse(
     min_processing_time = 999
     max_processing_time = -1
 
-    total = limit if skip is None else limit+skip
+    total = limit if skip is None else limit + skip
 
     pymupdf.TOOLS.mupdf_display_errors(False)
     pymupdf.TOOLS.mupdf_display_warnings(False)
 
     errors = []
 
-    for entry in track(iterator, total=total, description="Processing...", transient=True):
-
+    for entry in track(
+        iterator, total=total, description='Processing...', transient=True
+    ):
         # Skip the first `skip` entry
         if skip is not None and count_skipped < skip:
             count_skipped += 1
@@ -131,20 +137,18 @@ def parse(
 
         # Select the right input type
         if ignore_local_files:
-            output_filename = entry["metadata"]["page_hash"] + ".json"
-            doc_to_process: bytes = entry["pdf"]
+            output_filename = entry['metadata']['page_hash'] + '.json'
+            doc_to_process: bytes = entry['pdf']
         else:
-            output_filename = entry.replace(".pdf", ".json")
+            output_filename = entry.replace('.pdf', '.json')
             doc_to_process: str = os.path.join(input_path, entry)
 
-        logging.debug(f"Processing {output_filename}")
+        logging.debug(f'Processing {output_filename}')
 
         # Track time taken for the next action
         start_time = time.perf_counter()
 
-
         try:
-            
             parsed_document = parxy.parse(doc_to_process, level=level)
 
             # Print time taken and number of results
@@ -158,7 +162,7 @@ def parse(
             res_json = parsed_document.model_dump()
 
             # Store the JSON result
-            with open(os.path.join(output_folder, output_filename), "w") as file:
+            with open(os.path.join(output_folder, output_filename), 'w') as file:
                 json.dump(res_json, file)
 
             count_processed += 1
@@ -167,27 +171,27 @@ def parse(
             max_processing_time = max(max_processing_time, time_taken)
 
         except ParsingException as pex:
-            errors.append(f"{output_filename}: {str(pex)}")
+            errors.append(f'{output_filename}: {str(pex)}')
             # print(pex)
             continue
-
 
         # Terminate after `limit` processed entries
         if limit is not None and count_processed >= limit:
             break
 
-    logging.debug(f"Skipped {count_skipped} documents")
-    logging.debug(f"Processed {count_processed} documents")
-    logging.debug(f"Errors {len(errors)} documents")
+    logging.debug(f'Skipped {count_skipped} documents')
+    logging.debug(f'Processed {count_processed} documents')
+    logging.debug(f'Errors {len(errors)} documents')
 
-    print(f"[green]Documents parsed in {output_folder}[/green]")
+    print(f'[green]Documents parsed in {output_folder}[/green]')
 
     print()
 
-    print(f"Processed {count_processed} documents")
-    print(f"Processing time between {min_processing_time} and {max_processing_time} seconds per document")
+    print(f'Processed {count_processed} documents')
+    print(
+        f'Processing time between {min_processing_time} and {max_processing_time} seconds per document'
+    )
 
     if len(errors) > 0:
-        
-        print(f"{len(errors)} Errors")
+        print(f'{len(errors)} Errors')
         print(errors)
