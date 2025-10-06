@@ -1,4 +1,4 @@
-![pypi](https://img.shields.io/pypi/v/parxyval.svg)
+[![pypi](https://img.shields.io/pypi/v/parxyval.svg)](https://pypi.org/project/parxyval/)
 ![Pydantic v2](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/pydantic/pydantic/main/docs/badge/v2.json) [![uv](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/uv/main/assets/badge/v0.json)](https://github.com/astral-sh/uv)
 
 # Parxyval
