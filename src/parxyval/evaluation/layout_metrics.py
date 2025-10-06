@@ -69,5 +69,7 @@ def _extract_headings(
     return [
         block
         for block in page.blocks or []
-        if isinstance(block, TextBlock) and block.category is not None and block.category.lower() in HEADING_LABELS
+        if isinstance(block, TextBlock) 
+        and isinstance(block.category, str) 
+        and block.category.lower() in HEADING_LABELS
     ]
