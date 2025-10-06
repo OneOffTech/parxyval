@@ -3,8 +3,13 @@ import logging
 import os
 import sys
 import time
+from typing import Optional, List
 
 import pandas as pd
+from rich.console import Console
+from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TaskProgressColumn
+from rich.table import Table
+from rich import print
 from dotenv import load_dotenv
 from parxy_core.models import Document
 
@@ -64,7 +69,7 @@ def evaluate(
 ):
 
     logging.basicConfig(
-        level=logging.DEBUG,
+        level=logging.WARNING,
         format="%(asctime)s : %(levelname)s : %(name)s : %(message)s"
     )
    
@@ -89,51 +94,84 @@ def evaluate(
     
     metrics_fn = list([get_metric(metric) for metric in metrics_name])
 
+    console = Console()
+    
     logging.debug(f"Input folder: {input_folder}")
     logging.debug(f"Output folder: {output_folder}")
-    logging.debug(f"Metric: {metrics_name}")
+    logging.debug(f"Metrics: {metrics_name}")
+
+    # Get total number of files to process
+    files = os.listdir(input_folder)
+    total_files = len(files)
 
     res_list = []
-    for filename in os.listdir(input_folder):
-        logging.debug(f"Processing {filename}")
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        BarColumn(),
+        TaskProgressColumn(),
+        console=console,
+        transient=True
+    ) as progress:
+        task = progress.add_task("Evaluating documents...", total=total_files)
+        
+        for filename in files:
+            progress.update(task, description=f"Processing {filename}...")
 
-        # Read the parsing result
-        with open(os.path.join(input_folder, filename), "r") as f:
-            doc = Document(**json.loads(f.read()))
+            # Read the parsing result
+            with open(os.path.join(input_folder, filename), "r") as f:
+                doc = Document(**json.loads(f.read()))
 
-        # Read the ground truth
-        try:
-            with open(os.path.join(golden_folder, filename), "r") as f:
-                golden_doc = Document(**json.loads(f.read()))
-        except FileNotFoundError:
-            logging.error(f"File [{filename}] does not exist!")
-            continue
+            # Read the ground truth
+            try:
+                with open(os.path.join(golden_folder, filename), "r") as f:
+                    golden_doc = Document(**json.loads(f.read()))
+            except FileNotFoundError:
+                logging.error(f"File [{filename}] does not exist!")
+                progress.advance(task)
+                continue
 
-        base_data = {
-            "filename": filename,
-            "collection": golden_doc.source_data["collection"],
-            "doc_category": golden_doc.source_data["doc_category"],
-            "original_filename": golden_doc.source_data["original_filename"],
-            "page_no": golden_doc.source_data["page_no"],
-            "processing_time_seconds": doc.source_data["processing_time_seconds"],
-        }
+            base_data = {
+                "filename": filename,
+                "collection": golden_doc.source_data["collection"],
+                "doc_category": golden_doc.source_data["doc_category"],
+                "original_filename": golden_doc.source_data["original_filename"],
+                "page_no": golden_doc.source_data["page_no"],
+                "processing_time_seconds": doc.source_data["processing_time_seconds"],
+            }
 
-        # merge all metrics dicts into one
-        metrics_dict = {}
-        for metric_fn in metrics_fn:
-            metrics_dict.update(metric_fn(golden_doc, doc))
+            # merge all metrics dicts into one
+            metrics_dict = {}
+            for metric_fn in metrics_fn:
+                metrics_dict.update(metric_fn(golden_doc, doc))
 
-        # merge base data + metrics
-        row = {**base_data, **metrics_dict}
-        res_list.append(row)
+            # merge base data + metrics
+            row = {**base_data, **metrics_dict}
+            res_list.append(row)
+            progress.advance(task)
 
-    logging.debug(f"Processed {len(res_list)} documents.")
     timestamp_str = str(time.time()).replace(".", "")
     res_df = pd.DataFrame(res_list)
     input_folder_name = input_folder.replace(os.sep, "/").replace("\\", "/")
     input_folder_name = input_folder_name.split("/")[-1].replace(" ", "_").lower()
-    res_df.to_csv(os.path.join(output_folder, f"eval_{input_folder_name}_{timestamp_str}.csv"), index=False)
-    logging.debug(f"Results written to {output_folder}/eval_{input_folder_name}_{timestamp_str}.csv")
+    output_file = f"eval_{input_folder_name}_{timestamp_str}.csv"
+    output_path = os.path.join(output_folder, output_file)
+    res_df.to_csv(output_path, index=False)
 
+    print(f"\n[green]✓[/green] Evaluation completed. Results saved to: [blue]{output_path}[/blue]")
+    
+    # Print evaluation statistics
+    table = Table()
+    table.add_column("Metric")
+    table.add_column("Value", justify="right", style="green")
+    
+    table.add_row("Documents processed", str(len(res_list)))
+    table.add_row("Average parsing time", f"{res_df['processing_time_seconds'].mean():.2f}s")
+    
+    for metric_column in metrics_name:
+        if metric_column in res_df.columns and not res_df[metric_column].isna().all():
+            if res_df[metric_column].dtype in ['float64', 'int64']:
+                table.add_row(metric_column, f"{res_df[metric_column].mean():.4f}")
+    
+    console.print(table)
 
-    # TODO: print out some basic data from res_df, like average score for each metric and average processing_time_seconds
