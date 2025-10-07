@@ -1,6 +1,6 @@
 [project]
 name = "parxyval"
-version = "0.1.0" # DO NOT EDIT, updated automatically
+version = "0.1.1" # DO NOT EDIT, updated automatically
 description = "An evaluation framework for document parsing."
 license = "MIT"
 keywords= ["parxy", "evaluation", "evaluation-framework", "convert", "document", "document-parsing", "parser-benchmark", "pdf", "docx", "html", "markdown", "layout model", "rag", "llm", "document-performance-monitoring", "document-ai","text-extraction","data-quality","rag","parsing-tools"]
