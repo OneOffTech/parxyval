@@ -59,6 +59,11 @@ def get_doc_complexity(doc: Document):
     for page in doc.pages:
         for block in page.blocks:
             complexity_scores.append(CATEGORY_COMPLEXITY.get(block.category, 0))
+
+    if len(complexity_scores) <= 0:
+        # page has no content
+        return 0.0
+
     return sum(complexity_scores) / len(complexity_scores)
 
 
