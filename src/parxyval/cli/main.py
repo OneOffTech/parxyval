@@ -1,5 +1,3 @@
-
-
 import typer
 
 from .commands import app as sub_commands
