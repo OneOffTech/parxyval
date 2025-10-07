@@ -1,7 +1,6 @@
 import json
 import logging
 import os
-import sys
 import time
 from typing import Optional, List
 
@@ -16,12 +15,10 @@ from rich.progress import (
 )
 from rich.table import Table
 from rich import print
-from dotenv import load_dotenv
 from parxy_core.models import Document
 
 from parxyval.evaluation.factory import get_metric, get_metrics_name
 
-from typing import Optional, List
 
 import typer
 
@@ -100,7 +97,7 @@ def evaluate(
         os.makedirs(output_folder)
 
     if len(metrics_name) == 0:
-        logging.debug(f'The specified metrics are not implemented!')
+        logging.debug('The specified metrics are not implemented!')
         raise typer.Exit(code=422)
 
     metrics_fn = list([get_metric(metric) for metric in metrics_name])
