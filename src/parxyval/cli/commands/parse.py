@@ -11,10 +11,10 @@ from parxy_core.exceptions import ParsingException
 
 from parxyval.models.dataset import Dataset
 
-from typing import Optional, List
+from typing import Optional
 
 from rich import print
-from rich.progress import track, Progress, SpinnerColumn, TextColumn
+from rich.progress import track
 
 import typer
 
@@ -95,7 +95,7 @@ def parse(
     # Initialize the object to iterate over
     if ignore_local_files:
         # Hugging Face dataset
-        logging.debug(f'Input dataset: ds4sd/DocLayNet-v1.2')
+        logging.debug('Input dataset: ds4sd/DocLayNet-v1.2')
         iterator: IterableDatasetDict = load_dataset(
             Dataset.DOCLAYNETV2.value,
             split='train',
