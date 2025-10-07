@@ -1,10 +1,23 @@
 from difflib import SequenceMatcher
 from typing import Optional, List, Dict
 
-from parxy_core.models import BoundingBox, TextBlock, Page
+from parxy_core.models import BoundingBox, TextBlock, Page, Document
 
 HEADING_LABELS = ['heading', 'title', 'section-header']
 HEADING_MATCHER_TEXT_SIMILARITY_THRESHOLD = 0.9
+CATEGORY_COMPLEXITY = {
+    'Caption': 0.5,
+    'Footnote': 0.8,
+    'Formula': 1.0,
+    'List-item': 0.5,
+    'Page-footer': 0.8,
+    'Page-header': 0.8,
+    'Picture': 0.5,
+    'Section-header': 0.5,
+    'Table': 1.0,
+    'Text': 0.1,
+    'Title': 0.5,
+}
 
 
 def bbox_iou(b1: BoundingBox, b2: BoundingBox) -> float:
@@ -35,6 +48,23 @@ def bbox_iou(b1: BoundingBox, b2: BoundingBox) -> float:
     union = area1 + area2 - intersection
 
     return intersection / union if union > 0 else 0
+
+
+def count_chars(doc: Document):
+    return len(doc.text(page_separator=''))
+
+
+def get_doc_complexity(doc: Document):
+    complexity_scores = []
+    for page in doc.pages:
+        for block in page.blocks:
+            complexity_scores.append(CATEGORY_COMPLEXITY.get(block.category, 0))
+
+    if len(complexity_scores) <= 0:
+        # page has no content
+        return 0.0
+
+    return sum(complexity_scores) / len(complexity_scores)
 
 
 def match_bboxes(

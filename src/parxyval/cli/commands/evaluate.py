@@ -25,6 +25,8 @@ from typing import Optional, List
 
 import typer
 
+from parxyval.evaluation.utils import count_chars, get_doc_complexity
+
 app = typer.Typer()
 
 
@@ -147,6 +149,8 @@ def evaluate(
                 'original_filename': golden_doc.source_data['original_filename'],
                 'page_no': golden_doc.source_data['page_no'],
                 'processing_time_seconds': doc.source_data['processing_time_seconds'],
+                'characters_count': count_chars(golden_doc),
+                'complexity_score': get_doc_complexity(golden_doc),
             }
 
             # merge all metrics dicts into one
