@@ -107,6 +107,11 @@ def evaluate(
 
     console = Console()
 
+    # Driver name is based on the input folder, assuming that the folder name follows the convention
+    driver_name = (
+        os.path.basename(os.path.normpath(input_folder)).replace(' ', '_').lower()
+    )
+
     logging.debug(f'Input folder: {input_folder}')
     logging.debug(f'Output folder: {output_folder}')
     logging.debug(f'Metrics: {metrics_name}')
@@ -114,6 +119,9 @@ def evaluate(
     # Get total number of files to process
     files = os.listdir(input_folder)
     total_files = len(files)
+
+    print(f'Evaluate {driver_name} from {input_folder}')
+    print()
 
     res_list = []
     with Progress(
@@ -165,9 +173,7 @@ def evaluate(
 
     timestamp_str = str(time.time()).replace('.', '')
     res_df = pd.DataFrame(res_list)
-    input_folder_name = input_folder.replace(os.sep, '/').replace('\\', '/')
-    input_folder_name = input_folder_name.split('/')[-1].replace(' ', '_').lower()
-    output_file = f'eval_{input_folder_name}_{timestamp_str}.csv'
+    output_file = f'eval_{driver_name}_{timestamp_str}.csv'
     output_path = os.path.join(output_folder, output_file)
     res_df.to_csv(output_path, index=False)
 
